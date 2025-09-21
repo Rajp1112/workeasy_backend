@@ -1,0 +1,133 @@
+const User = require('../models/user-models');
+const bcrypt = require('bcryptjs');
+
+// Home Logic
+const home = async (req, res) => {
+  try {
+    res.status(200).send('Welcome to WorkEasy Backend 🚀');
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+};
+
+// Register Logic
+const register = async (req, res) => {
+  console.log("Register request body:", req.body);
+  
+  try {
+    const {
+      first_name,
+      last_name,
+      email,
+      password,
+      phone,
+      postal_code,
+      address,
+      city,
+      role,
+      skills,
+      experience,
+      hour_rate,
+      bio,
+      available,
+      profileImage,
+    } = req.body;
+
+    // check if email exists
+    const userExist = await User.findOne({ email });
+    if (userExist) {
+      return res.status(400).json({ msg: 'Email already exists' });
+    }
+
+    // Generate auto-increment ID (only for workers, you can adapt for all roles)
+    let numericId = 1;
+    if (role === "worker") {
+      const lastWorker = await User.find({ role: "worker" }).sort({ createdAt: -1 }).limit(1);
+      if (lastWorker.length > 0) {
+        numericId = lastWorker[0].numericId + 1;
+      }
+    }
+
+    // create new user
+    const userCreated = await User.create({
+      first_name,
+      last_name,
+      email,
+      password,
+      phone,
+      postal_code,
+      address,
+      city,
+      role: role || "customer",
+      numericId, // Add numericId here
+      skills: skills ? (Array.isArray(skills) ? skills : [skills]) : [],
+      experience,
+      hour_rate,
+      bio,
+      available: available === "true" || available === true,
+      profileImage,
+    });
+
+    res.status(201).json({
+      msg: 'Registration Successful',
+      token: await userCreated.generateToken(),
+      userId: userCreated.numericId, // now use numeric ID
+      role: userCreated.role,
+    });
+  } catch (error) {
+    console.error("Register error:", error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+};
+
+
+// Login Logic
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const userExist = await User.findOne({ email });
+    if (!userExist) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    const isMatch = await userExist.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ msg: 'Invalid email or password' });
+    }
+
+    res.status(200).json({
+      msg: 'Login successful',
+      token: await userExist.generateToken(),
+      userId: userExist._id.toString(),
+      role: userExist.role,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+};
+
+
+const user = async (req, res) => {
+  try {
+    const userData = req.user;
+    return res.status(200).json({ user: userData });
+  } catch (error) {
+    console.error("User fetch error:", error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+};
+const fetchWorkers = async (req, res) => {
+  try {
+    console.log(req.user); 
+    
+    const workers = await User.find({ role: "worker" }).select("-password"); 
+    return res.status(200).json({ workers });
+  } catch (error) {
+    console.error("Fetch workers error:", error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+};
+module.exports = { home, register, login, user, fetchWorkers };
