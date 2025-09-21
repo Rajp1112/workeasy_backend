@@ -1,8 +1,9 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const authRoute = require('./router/auth-router');
-const connectDb = require('./utils/db');
+import 'dotenv/config'; // loads .env automatically
+import express from 'express';
+import cors from 'cors';
+import authRoute from './router/auth-router.js';
+import bookingRoute from './router/booking-routes.js';
+import connectDb from './utils/db.js';
 
 const app = express();
 
@@ -15,12 +16,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // -------------------- Middleware --------------------
-app.use(express.json()); // parse JSON bodies
+app.use(express.json()); 
 
 // -------------------- Routes --------------------
 app.use('/api/auth', authRoute);
-
-// You can enable these later when ready
+app.use('/api/bookings', bookingRoute);
 // app.use('/api/form', contactRoute);
 // app.use('/api/data', serviceRoute);
 // app.use('/api/admin', adminRoute);
