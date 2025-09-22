@@ -1,6 +1,9 @@
-import 'dotenv/config'; // loads .env automatically
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import http from 'http';
+import { Server } from 'socket.io';
+
 import authRoute from './router/auth-router.js';
 import bookingRoute from './router/booking-routes.js';
 import connectDb from './utils/db.js';
@@ -16,25 +19,50 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // -------------------- Middleware --------------------
-app.use(express.json()); 
+app.use(express.json());
 
 // -------------------- Routes --------------------
 app.use('/api/auth', authRoute);
 app.use('/api/bookings', bookingRoute);
-// app.use('/api/form', contactRoute);
-// app.use('/api/data', serviceRoute);
-// app.use('/api/admin', adminRoute);
-// app.use('/api/movies', movieRoute);
 
 // -------------------- Connect DB & Start Server --------------------
 const PORT = process.env.PORT || 5000;
 
+// Module-scoped variable for Socket.IO
+let io;
+
 connectDb()
   .then(() => {
-    app.listen(PORT, () => {
+    console.log('DB connection successful');
+
+    // Create HTTP server from Express app
+    const server = http.createServer(app);
+
+    // Initialize Socket.IO
+    io = new Server(server, {
+      cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"],
+      },
+    });
+
+    // Socket.IO connection listener
+    io.on("connection", (socket) => {
+      console.log("User connected:", socket.id);
+
+      socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+      });
+    });
+
+    // Start server
+    server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
     console.error("DB connection failed:", err);
   });
+
+// Export io so controllers can emit events
+export { io };

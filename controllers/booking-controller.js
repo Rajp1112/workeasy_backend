@@ -1,15 +1,17 @@
 import Booking from "../models/booking-model.js";
-
+import { io } from "../server.js";
 // Create a new booking
 export const createBooking = async (req, res) => {
   try {
     const booking = new Booking(req.body);
     const savedBooking = await booking.save();
+    io.emit("bookingCreated", savedBooking);
     return res.status(201).json({
       success: true,
       message: "Successfully Booked the Service",
       booking: savedBooking,
     });
+
   } catch (error) {
     console.error("Error creating booking:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -63,10 +65,12 @@ export const getWorkerBookings = async (req, res) => {
 // Update booking (worker accept/reject, customer cancel, etc.)
 export const updateBooking = async (req, res) => {
   try {
-    const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+
+    // Emit the updated booking to all connected clients
+    io.emit("bookingUpdated", booking);
+
     res.status(200).json({ success: true, booking });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -78,6 +82,7 @@ export const deleteBooking = async (req, res) => {
   try {
     const booking = await Booking.findByIdAndDelete(req.params.id);
     if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+    io.emit("bookingUpdated", booking);
     res.status(200).json({ success: true, message: "Booking deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
