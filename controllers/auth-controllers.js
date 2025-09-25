@@ -1,8 +1,8 @@
-const User = require('../models/user-models');
-const bcrypt = require('bcryptjs');
+import Review from '../models/review-model.js';
+import User from '../models/user-models.js';
 
 // Home Logic
-const home = async (req, res) => {
+export const home = async (req, res) => {
   try {
     res.status(200).send('Welcome to WorkEasy Backend 🚀');
   } catch (error) {
@@ -12,9 +12,9 @@ const home = async (req, res) => {
 };
 
 // Register Logic
-const register = async (req, res) => {
-  console.log("Register request body:", req.body);
-  
+export const register = async (req, res) => {
+  console.log('Register request body:', req.body);
+
   try {
     const {
       first_name,
@@ -42,8 +42,10 @@ const register = async (req, res) => {
 
     // Generate auto-increment ID (only for workers, you can adapt for all roles)
     let numericId = 1;
-    if (role === "worker") {
-      const lastWorker = await User.find({ role: "worker" }).sort({ createdAt: -1 }).limit(1);
+    if (role === 'worker') {
+      const lastWorker = await User.find({ role: 'worker' })
+        .sort({ createdAt: -1 })
+        .limit(1);
       if (lastWorker.length > 0) {
         numericId = lastWorker[0].numericId + 1;
       }
@@ -59,13 +61,13 @@ const register = async (req, res) => {
       postal_code,
       address,
       city,
-      role: role || "customer",
+      role: role || 'customer',
       numericId, // Add numericId here
       skills: skills ? (Array.isArray(skills) ? skills : [skills]) : [],
       experience,
       hour_rate,
       bio,
-      available: available === "true" || available === true,
+      available: available === 'true' || available === true,
       profileImage,
     });
 
@@ -76,14 +78,13 @@ const register = async (req, res) => {
       role: userCreated.role,
     });
   } catch (error) {
-    console.error("Register error:", error);
+    console.error('Register error:', error);
     res.status(500).json({ msg: 'Internal server error' });
   }
 };
 
-
 // Login Logic
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -104,30 +105,48 @@ const login = async (req, res) => {
       role: userExist.role,
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error('Login error:', error);
     res.status(500).json({ msg: 'Internal server error' });
   }
 };
 
-
-const user = async (req, res) => {
+export const user = async (req, res) => {
   try {
     const userData = req.user;
     return res.status(200).json({ user: userData });
   } catch (error) {
-    console.error("User fetch error:", error);
+    console.error('User fetch error:', error);
     res.status(500).json({ msg: 'Internal server error' });
   }
 };
-const fetchWorkers = async (req, res) => {
+
+export const fetchWorkers = async (req, res) => {
   try {
-    console.log(req.user); 
-    
-    const workers = await User.find({ role: "worker" }).select("-password"); 
-    return res.status(200).json({ workers });
+    const workers = await User.find({ role: 'worker' }).select('-password');
+
+    const workersWithReviews = await Promise.all(
+      workers.map(async (worker) => {
+        const reviews = await Review.find({ worker_id: worker._id }).populate(
+          'customer_id',
+          'first_name last_name email'
+        );
+
+        // Calculate average rating
+        const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+        const averageRating =
+          reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : null;
+
+        return {
+          ...worker.toObject(),
+          reviews,
+          averageRating,
+        };
+      })
+    );
+
+    return res.status(200).json({ workers: workersWithReviews });
   } catch (error) {
-    console.error("Fetch workers error:", error);
+    console.error('Fetch workers error:', error);
     res.status(500).json({ msg: 'Internal server error' });
   }
 };
-module.exports = { home, register, login, user, fetchWorkers };
