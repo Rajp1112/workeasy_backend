@@ -32,16 +32,15 @@ export const register = async (req, res) => {
       hour_rate,
       bio,
       available,
-      profileImage,
     } = req.body;
 
-    // check if email exists
+    // Check if email exists
     const userExist = await User.findOne({ email });
     if (userExist) {
       return res.status(400).json({ msg: 'Email already exists' });
     }
 
-    // Generate auto-increment ID (only for workers, you can adapt for all roles)
+    // Generate auto-increment ID
     let numericId = 1;
     if (role === 'worker') {
       const lastWorker = await User.find({ role: 'worker' })
@@ -52,7 +51,10 @@ export const register = async (req, res) => {
       }
     }
 
-    // create new user
+    // Get image path from multer
+    const profileImagePath = req.file ? req.file.path : undefined;
+
+    // Create new user
     const userCreated = await User.create({
       first_name,
       last_name,
@@ -63,19 +65,19 @@ export const register = async (req, res) => {
       address,
       city,
       role: role || 'customer',
-      numericId, // Add numericId here
+      numericId,
       skills: skills ? (Array.isArray(skills) ? skills : [skills]) : [],
       experience,
       hour_rate,
       bio,
       available: available === 'true' || available === true,
-      profileImage,
+      profileImage: profileImagePath,
     });
 
     res.status(201).json({
       msg: 'Registration Successful',
       token: await userCreated.generateToken(),
-      userId: userCreated.numericId, // now use numeric ID
+      userId: userCreated.numericId,
       role: userCreated.role,
     });
   } catch (error) {
@@ -114,7 +116,6 @@ export const login = async (req, res) => {
 export const user = async (req, res) => {
   try {
     const userData = req.user;
-
     let enrichedUser = userData.toObject();
 
     // If user is a worker, include reviews and average rating

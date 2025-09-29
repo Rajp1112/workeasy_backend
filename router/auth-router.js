@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/auth-controllers');
+const authController = require('../controllers/auth-controllers.js');
 const {
   authMiddleware,
   authorizeRoles,
-} = require('../middleware/auth-middleware');
-const multer = require('multer');
-const storage = multer.memoryStorage(); // use diskStorage if you want to save files locally
-const upload = multer({ storage });
+} = require('../middleware/auth-middleware.js');
+const { upload } = require('../utils/upload.js');
 
 // Public
 router.route('/').get(authController.home);
