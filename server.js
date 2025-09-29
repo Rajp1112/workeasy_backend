@@ -9,9 +9,12 @@ import bookingRoute from './router/booking-routes.js';
 import reviewRoutes from './router/review-router.js';
 import connectDb from './utils/db.js';
 import { setSocketInstance } from './utils/socket.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // -------------------- CORS --------------------
 const corsOptions = {
   origin: 'http://localhost:5173',
@@ -22,7 +25,7 @@ app.use(cors(corsOptions));
 
 // -------------------- Middleware --------------------
 app.use(express.json());
-
+app.use('/uploads', express.static(path.join(__dirname, 'utils/uploads')));
 // -------------------- Routes --------------------
 app.use('/api/auth', authRoute);
 app.use('/api/bookings', bookingRoute);
