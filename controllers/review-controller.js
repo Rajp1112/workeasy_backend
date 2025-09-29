@@ -1,5 +1,5 @@
 import Review from '../models/review-model.js';
-import { io } from '../server.js';
+import { getSocketInstance } from '../utils/socket.js';
 
 // Create a review
 export const createReview = async (req, res) => {
@@ -8,6 +8,7 @@ export const createReview = async (req, res) => {
     const savedReview = await review.save();
 
     // Emit real-time event
+    const io = getSocketInstance();
     io.emit('reviewCreated', savedReview);
 
     return res.status(201).json({
@@ -51,7 +52,7 @@ export const updateReview = async (req, res) => {
       { rating, comment },
       { new: true }
     );
-
+    const io = getSocketInstance();
     io.emit('reviewUpdated', updatedReview);
 
     return res.status(200).json({
@@ -70,7 +71,7 @@ export const deleteReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const deletedReview = await Review.findByIdAndDelete(reviewId);
-
+    const io = getSocketInstance();
     io.emit('reviewDeleted', reviewId);
 
     return res.status(200).json({

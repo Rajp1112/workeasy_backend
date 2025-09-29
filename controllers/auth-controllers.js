@@ -1,5 +1,6 @@
 import Review from '../models/review-model.js';
 import User from '../models/user-models.js';
+import { getSocketInstance } from '../utils/socket.js';
 
 // Home Logic
 export const home = async (req, res) => {
@@ -113,7 +114,27 @@ export const login = async (req, res) => {
 export const user = async (req, res) => {
   try {
     const userData = req.user;
-    return res.status(200).json({ user: userData });
+
+    let enrichedUser = userData.toObject();
+
+    // If user is a worker, include reviews and average rating
+    if (userData.role === 'worker') {
+      const reviews = await Review.find({ worker_id: userData._id }).populate(
+        'customer_id',
+        'first_name last_name email'
+      );
+
+      const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+      const averageRating =
+        reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : null;
+
+      enrichedUser.reviews = reviews;
+      enrichedUser.averageRating = averageRating;
+    }
+
+    return res.status(200).json({
+      user: enrichedUser,
+    });
   } catch (error) {
     console.error('User fetch error:', error);
     res.status(500).json({ msg: 'Internal server error' });
@@ -147,6 +168,39 @@ export const fetchWorkers = async (req, res) => {
     return res.status(200).json({ workers: workersWithReviews });
   } catch (error) {
     console.error('Fetch workers error:', error);
+    res.status(500).json({ msg: 'Internal server error' });
+  }
+};
+
+export const updateAvailability = async (req, res) => {
+  try {
+    const { workerId, available } = req.body || {};
+
+    if (!workerId || typeof available !== 'boolean') {
+      return res.status(400).json({ msg: 'Invalid request data' });
+    }
+
+    const worker = await User.findOne({ _id: workerId, role: 'worker' });
+
+    if (!worker) {
+      return res.status(404).json({ msg: 'Worker not found' });
+    }
+
+    worker.available = available;
+    await worker.save();
+
+    const io = getSocketInstance();
+    io.emit('workerAvailabilityUpdated', {
+      workerId: worker._id,
+      available: worker.available,
+    });
+
+    res.status(200).json({
+      msg: 'Availability updated successfully',
+      available: worker.available,
+    });
+  } catch (error) {
+    console.error('Update availability error:', error);
     res.status(500).json({ msg: 'Internal server error' });
   }
 };

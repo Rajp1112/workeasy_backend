@@ -1,19 +1,19 @@
-import Booking from "../models/booking-model.js";
-import { io } from "../server.js";
+import Booking from '../models/booking-model.js';
+import { getSocketInstance } from '../utils/socket.js';
 // Create a new booking
 export const createBooking = async (req, res) => {
   try {
     const booking = new Booking(req.body);
     const savedBooking = await booking.save();
-    io.emit("bookingCreated", savedBooking);
+    const io = getSocketInstance();
+    io.emit('bookingCreated', savedBooking);
     return res.status(201).json({
       success: true,
-      message: "Successfully Booked the Service",
+      message: 'Successfully Booked the Service',
       booking: savedBooking,
     });
-
   } catch (error) {
-    console.error("Error creating booking:", error);
+    console.error('Error creating booking:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -32,12 +32,14 @@ export const getBookings = async (req, res) => {
 export const getCustomerBookings = async (req, res) => {
   try {
     const customerId = req.params.id; // get ID from frontend
-    console.log("Fetching bookings for customer:", customerId);
+    console.log('Fetching bookings for customer:', customerId);
 
     const bookings = await Booking.find({ customer_id: customerId });
 
     if (!bookings || bookings.length === 0) {
-      return res.status(404).json({ success: false, message: "No bookings found" });
+      return res
+        .status(404)
+        .json({ success: false, message: 'No bookings found' });
     }
 
     res.status(200).json({ success: true, bookings });
@@ -47,11 +49,10 @@ export const getCustomerBookings = async (req, res) => {
   }
 };
 
-
 export const getWorkerBookings = async (req, res) => {
   try {
-    const workerId = req.params.id; 
-    console.log("Fetching bookings for worker:", workerId);
+    const workerId = req.params.id;
+    console.log('Fetching bookings for worker:', workerId);
 
     const bookings = await Booking.find({ worker_id: workerId });
 
@@ -65,11 +66,17 @@ export const getWorkerBookings = async (req, res) => {
 // Update booking (worker accept/reject, customer cancel, etc.)
 export const updateBooking = async (req, res) => {
   try {
-    const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+    const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!booking)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Booking not found' });
 
     // Emit the updated booking to all connected clients
-    io.emit("bookingUpdated", booking);
+    const io = getSocketInstance();
+    io.emit('bookingUpdated', booking);
 
     res.status(200).json({ success: true, booking });
   } catch (error) {
@@ -81,9 +88,15 @@ export const updateBooking = async (req, res) => {
 export const deleteBooking = async (req, res) => {
   try {
     const booking = await Booking.findByIdAndDelete(req.params.id);
-    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
-    io.emit("bookingUpdated", booking);
-    res.status(200).json({ success: true, message: "Booking deleted successfully" });
+    if (!booking)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Booking not found' });
+    const io = getSocketInstance();
+    io.emit('bookingUpdated', booking);
+    res
+      .status(200)
+      .json({ success: true, message: 'Booking deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
