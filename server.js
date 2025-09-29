@@ -8,12 +8,13 @@ import authRoute from './router/auth-router.js';
 import bookingRoute from './router/booking-routes.js';
 import reviewRoutes from './router/review-router.js';
 import connectDb from './utils/db.js';
+import { setSocketInstance } from './utils/socket.js';
 
 const app = express();
 
 // -------------------- CORS --------------------
 const corsOptions = {
-  origin: 'http://localhost:5173', // frontend URL
+  origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
 };
@@ -29,25 +30,21 @@ app.use('/api/reviews', reviewRoutes);
 // -------------------- Connect DB & Start Server --------------------
 const PORT = process.env.PORT || 5000;
 
-// Module-scoped variable for Socket.IO
-let io;
 connectDb()
   .then(() => {
     console.log('DB connection successful');
 
-    // Create HTTP server from Express app
     const server = http.createServer(app);
 
-    // Initialize Socket.IO
-    io = new Server(server, {
+    const io = new Server(server, {
       cors: {
         origin: 'http://localhost:5173',
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
       },
     });
-    global.io = io;
 
-    // Socket.IO connection listener
+    setSocketInstance(io);
+
     io.on('connection', (socket) => {
       console.log('User connected:', socket.id);
 
@@ -56,7 +53,6 @@ connectDb()
       });
     });
 
-    // Start server
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
@@ -64,6 +60,3 @@ connectDb()
   .catch((err) => {
     console.error('DB connection failed:', err);
   });
-
-// Export io so controllers can emit events
-export { io };
