@@ -1,27 +1,35 @@
-const express = require('express');
-const router = express.Router();
-const authController = require('../controllers/auth-controllers.js');
-const {
+// auth-router.js
+import {
+  home,
+  register,
+  login,
+  user,
+  fetchWorkers,
+  updateAvailability,
+} from '../controllers/auth-controllers.js';
+
+import {
   authMiddleware,
   authorizeRoles,
-} = require('../middleware/auth-middleware.js');
-const { upload } = require('../utils/upload.js');
+} from '../middleware/auth-middleware.js';
+import { upload } from '../utils/upload.js';
+import express from 'express';
+
+const router = express.Router();
 
 // Public
-router.route('/').get(authController.home);
-router
-  .route('/register')
-  .post(upload.single('profileImage'), authController.register);
-router.route('/login').post(authController.login);
+router.route('/').get(home);
+router.route('/register').post(upload.single('profileImage'), register);
+router.route('/login').post(login);
 
 // Protected
-router.route('/user').get(authMiddleware, authController.user);
-router.get('/workers', authMiddleware, authController.fetchWorkers);
-router.put('/workers/availability', authController.updateAvailability);
+router.route('/user').get(authMiddleware, user);
+router.get('/workers', authMiddleware, fetchWorkers);
+router.put('/workers/availability', updateAvailability);
 router
   .route('/admin')
   .get(authMiddleware, authorizeRoles('admin'), (req, res) => {
     res.json({ msg: 'Welcome Admin 🚀' });
   });
 
-module.exports = router;
+export default router;

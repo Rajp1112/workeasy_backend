@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-// const URI = 'mongodb://127.0.0.1:27017/mern_admin';
+const URI = 'mongodb://127.0.0.1:27017/workeasy';
 // mongoose.connect(URI);
-const URI = process.env.MONGODB_URI;
+// const URI = process.env.MONGODB_URI;
 
 const connectDb = async () => {
   try {
@@ -14,4 +14,4 @@ const connectDb = async () => {
   }
 };
 
-module.exports = connectDb;
+export default connectDb;
