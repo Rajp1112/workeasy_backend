@@ -1,62 +1,20 @@
-// import multer from 'multer';
-// import path from 'path';
-// import fs from 'fs';
-// import { fileURLToPath } from 'url';
-
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
-
-// export const uploadDir = path.join(__dirname, 'uploads');
-
-// if (!fs.existsSync(uploadDir)) {
-//   fs.mkdirSync(uploadDir, { recursive: true });
-// }
-
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, uploadDir);
-//   },
-//   filename: function (req, file, cb) {
-//     const ext = path.extname(file.originalname).toLowerCase();
-//     const base = path.basename(file.originalname, ext).replace(/\s+/g, '-');
-//     cb(null, `${base}-${Date.now()}${ext}`);
-//   },
-// });
-
-// function fileFilter(req, file, cb) {
-//   const allowed = /jpg|jpeg|png|gif|webp/;
-//   const extOk = allowed.test(path.extname(file.originalname).toLowerCase());
-//   const mimeOk = allowed.test(file.mimetype);
-//   if (extOk && mimeOk) return cb(null, true);
-//   cb(new Error('Only image files are allowed (jpg, jpeg, png, gif, webp).'));
-// }
-
-// export const upload = multer({
-//   storage,
-//   fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 },
-// });
-
-// utils/upload.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-const UPLOAD_TMP_DIR = '/tmp/uploads';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Ensure /tmp/uploads exists (writable in Vercel serverless)
-try {
-  if (!fs.existsSync(UPLOAD_TMP_DIR)) {
-    fs.mkdirSync(UPLOAD_TMP_DIR, { recursive: true });
-  }
-} catch (e) {
-  // Log but don't crash—some concurrent invocations may race here
-  console.error('Failed to ensure temp upload dir:', e);
+export const uploadDir = path.join(__dirname, 'uploads');
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, UPLOAD_TMP_DIR);
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -76,10 +34,5 @@ function fileFilter(req, file, cb) {
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
-
-// Helper: resolve absolute temp path for a saved file
-export function getTempFilePath(filename) {
-  return path.join(UPLOAD_TMP_DIR, filename);
-}
