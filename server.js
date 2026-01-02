@@ -22,7 +22,8 @@ const __dirname = path.dirname(__filename);
 
 // -------------------- CORS --------------------
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  // origin: 'http://localhost:5173',
+  origin: 'https://workeasy-backend.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
 };
