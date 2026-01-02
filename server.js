@@ -22,7 +22,8 @@ const __dirname = path.dirname(__filename);
 
 // -------------------- CORS --------------------
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  // origin: 'http://localhost:5173',
+  origin: 'https://workeasy-backend.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
 };
@@ -33,6 +34,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'utils/uploads')));
 
 // -------------------- Routes --------------------
+app.get('/', (_req, res) => res.status(200).send('OK'));
 app.use('/api/auth', authRoute);
 app.use('/api/bookings', bookingRoute);
 app.use('/api/reviews', reviewRoutes);
