@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 // Base user schema
 const userSchema = new mongoose.Schema(
@@ -16,14 +16,14 @@ const userSchema = new mongoose.Schema(
     profileImage: {
       type: String,
       default:
-        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+        'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
     },
 
     // Role-based: customer / worker / admin
     role: {
       type: String,
-      enum: ["customer", "worker", "admin"],
-      default: "customer",
+      enum: ['customer', 'worker', 'admin'],
+      default: 'customer',
     },
 
     // Customer-specific fields
@@ -45,8 +45,8 @@ const userSchema = new mongoose.Schema(
 );
 
 // Hash password before save
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
 
   try {
     const saltRound = await bcrypt.genSalt(10);
@@ -72,13 +72,13 @@ userSchema.methods.generateToken = function () {
         role: this.role,
       },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "30d" }
+      { expiresIn: '30d' }
     );
   } catch (error) {
     console.error(error);
   }
 };
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+export default User;
