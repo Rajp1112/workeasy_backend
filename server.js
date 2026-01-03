@@ -28,7 +28,7 @@ const allowedOrigins =
 
 // -------------------- CORS --------------------
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 };
@@ -56,7 +56,7 @@ connectDb()
 
     const io = new Server(server, {
       cors: {
-        origin: allowedOrigins,
+        origin: "*",
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
         credentials: true,
       },
