@@ -19,7 +19,9 @@ const router = express.Router();
 
 // Public
 router.route('/').get(home);
-router.route('/register').post(upload.single('profileImage'), register);
+// router.route('/register').post(upload.single('profileImage'), register);
+router.route('/register').post(register);
+
 router.route('/login').post(login);
 
 // Protected
