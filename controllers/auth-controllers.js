@@ -52,7 +52,7 @@ export const register = async (req, res) => {
     }
 
     // Get image path from multer
-    const profileImagePath = req.file ? req.file.path : undefined;
+    // const profileImagePath = req.file ? req.file.path : undefined;
 
     // Create new user
     const userCreated = await User.create({
@@ -71,7 +71,7 @@ export const register = async (req, res) => {
       hour_rate,
       bio,
       available: available === 'true' || available === true,
-      profileImage: profileImagePath,
+      // profileImage: profileImagePath,
     });
 
     res.status(201).json({

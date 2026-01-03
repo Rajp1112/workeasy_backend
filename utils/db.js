@@ -1,17 +1,17 @@
-import mongoose from 'mongoose';
-
-// const URI = 'mongodb://127.0.0.1:27017/workeasy';
-const URI = process.env.MONGODB_URI;
-// mongoose.connect(URI);
-// const URI = process.env.MONGODB_URI;
+import mongoose from "mongoose";
 
 const connectDb = async () => {
   try {
-    await mongoose.connect(URI);
-    console.log('Connection Successful to DB');
+    const uri =
+      process.env.APP_ENV === "prod"
+        ? process.env.MONGODB_PROD_URI
+        : process.env.MONGODB_LOCAL_URI;
+
+    await mongoose.connect(uri);
+    console.log(`✅ DB connected (${process.env.APP_ENV})`);
   } catch (error) {
-    console.error('database connection failed');
-    process.exit(0);
+    console.error("❌ DB connection failed", error.message);
+    process.exit(1);
   }
 };
 
