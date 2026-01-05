@@ -54,6 +54,12 @@ export const register = async (req, res) => {
     // Get image path from multer
     // const profileImagePath = req.file ? req.file.path : undefined;
 
+    let profileImageUrl;
+    if (req.file && req.file.buffer) {
+      const result = await uploadBufferToCloudinary(req.file.buffer);
+      profileImageUrl = result.secure_url;
+    }
+
     // Create new user
     const userCreated = await User.create({
       first_name,
@@ -72,6 +78,7 @@ export const register = async (req, res) => {
       bio,
       available: available === 'true' || available === true,
       // profileImage: profileImagePath,
+      profileImage: profileImageUrl,
     });
 
     res.status(201).json({
