@@ -1,6 +1,7 @@
 import Review from '../models/review-model.js';
 import User from '../models/user-models.js';
 import { getSocketInstance } from '../utils/socket.js';
+import { uploadBufferToCloudinary } from '../utils/cloudinary-upload.js';
 
 // Home Logic
 export const home = async (req, res) => {
@@ -54,11 +55,13 @@ export const register = async (req, res) => {
     // Get image path from multer
     // const profileImagePath = req.file ? req.file.path : undefined;
 
+    console.log(req.file);
     let profileImageUrl;
     if (req.file && req.file.buffer) {
       const result = await uploadBufferToCloudinary(req.file.buffer);
       profileImageUrl = result.secure_url;
     }
+    console.log(profileImageUrl);
 
     // Create new user
     const userCreated = await User.create({
