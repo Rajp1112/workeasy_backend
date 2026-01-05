@@ -60,6 +60,9 @@ export const register = async (req, res) => {
     if (req.file && req.file.buffer) {
       const result = await uploadBufferToCloudinary(req.file.buffer);
       profileImageUrl = result.secure_url;
+    } else {
+      const firstLetter = first_name?.charAt(0).toUpperCase() || 'U';
+      profileImageUrl = `https://ui-avatars.com/api/?name=${firstLetter}&background=random&color=fff`;
     }
     console.log(profileImageUrl);
 
