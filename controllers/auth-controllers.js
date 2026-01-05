@@ -89,6 +89,7 @@ export const register = async (req, res) => {
       token: await userCreated.generateToken(),
       userId: userCreated.numericId,
       role: userCreated.role,
+      profileImage: userCreated.profileImage,
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -116,6 +117,7 @@ export const login = async (req, res) => {
       token: await userExist.generateToken(),
       userId: userExist._id.toString(),
       role: userExist.role,
+      profileImage: userExist.profileImage,
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -127,6 +129,7 @@ export const user = async (req, res) => {
   try {
     const userData = req.user;
     let enrichedUser = userData.toObject();
+    console.log(enrichedUser);
 
     // If user is a worker, include reviews and average rating
     if (userData.role === 'worker') {
